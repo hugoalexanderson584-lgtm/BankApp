@@ -57,7 +57,24 @@ namespace BankApp
             Status = TransactionStatus.pending;
             //Currency = Currency
         }
-        
+        public void MarkCompleted()
+        {
+            if (Status != TransactionStatus.pending)
+                throw new InvalidOperationException(
+                    "Only pending transactions can be completed.");
+
+            Status = TransactionStatus.completed;
+        }
+
+        public void MarkFailed()
+        {
+            if (Status != TransactionStatus.pending)
+                throw new InvalidOperationException(
+                    "Only pending transactions can be failed.");
+
+            Status = TransactionStatus.failed;
+        }
+
     }
 }
             
