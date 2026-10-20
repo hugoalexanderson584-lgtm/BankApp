@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Transactions;
-
+using BankApp.Enums;
 namespace BankApp
 {
     internal class TransactionService
