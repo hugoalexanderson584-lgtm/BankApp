@@ -5,14 +5,14 @@ namespace BankApp;
 public class BankAccount
 {
     public string AccountNumber { get; set; }
-    public int OwnerID { get; set; }
+    public int OwnerId { get; set; }
     public decimal Balance { get; private set; }
     public Currency Currency { get; set; }
 
     public BankAccount(string accountNumber, int ownerId, Currency currency)
     {
         AccountNumber = accountNumber;
-        OwnerID = ownerId;
+        OwnerId = ownerId;
         Currency = currency;
         Balance = 0m;
     }
