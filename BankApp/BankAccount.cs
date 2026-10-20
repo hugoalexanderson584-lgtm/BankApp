@@ -1,3 +1,5 @@
+using BankApp.Enums;
+
 namespace BankApp;
 
 public class BankAccount
@@ -19,14 +21,13 @@ public class BankAccount
     {
         if (amount <= 0)
         {
-            return false; 
+            return false;
         }
 
         Balance += amount;
-        return true; 
-
+        return true;
     }
-    
+
     public bool Withdraw(decimal amount)
     {
         if (amount <= 0 || amount > Balance)
@@ -38,4 +39,3 @@ public class BankAccount
         return true;
     }
 }
-
