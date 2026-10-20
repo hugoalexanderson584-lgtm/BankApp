@@ -2,15 +2,10 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Text;
-
+using BankApp.Enums;
 namespace BankApp
 {
-    public enum Currency
-    {
-        SEK,
-        EUR,
-        USD
-    }
+    
     public enum TransactionStatus
     {
         pending,
