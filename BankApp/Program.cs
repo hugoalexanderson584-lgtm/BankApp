@@ -1,19 +1,10 @@
-﻿using System.Reflection.Metadata.Ecma335;
+﻿namespace BankApp;
 
-namespace BankApp
+internal class Program
 {
-    internal class Program
+    private static void Main(string[] args)
     {
-        static void Main(string[] args)
-        {
-
-        }
+        BankApplication app = new BankApplication();
+        app.Run();
     }
-  internal class Program
-  {
-    static void Main(string[] args)
-    {
-       
-    }
-  }
 }
