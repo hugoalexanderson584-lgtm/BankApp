@@ -5,6 +5,12 @@ using System.Text;
 
 namespace BankApp
 {
+    public enum Currency
+    {
+        SEK,
+        EUR,
+        USD
+    }
     public enum TransactionStatus
     {
         pending,
@@ -25,9 +31,9 @@ namespace BankApp
 
         public TransactionStatus Status { get; private set; }
 
-        //public Currency Currency { get; private set; }
+        public Currency Currency { get; private set; }
 
-        public Transactions(string senderAccountId, string receiverAccountId, decimal amount)
+        public Transactions(string senderAccountId, string receiverAccountId, decimal amount, Currency currency)
         {
             // Arguments to make sure the user doesnt do something stupid 
             if (string.IsNullOrWhiteSpace(senderAccountId))
@@ -55,7 +61,7 @@ namespace BankApp
             Amount = amount;
             CreatedAt = DateTime.Now;
             Status = TransactionStatus.pending;
-            //Currency = Currency
+            Currency = currency;
         }
         public void MarkCompleted()
         {
