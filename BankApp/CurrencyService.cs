@@ -61,5 +61,10 @@ namespace BankApp
 
       return Math.Round(amount * rate, 2);
     }
+
+    public List<Currency> GetSupportedCurrencies()
+    {
+      return Enum.GetValues<Currency>().ToList();
+    }
   }
 }
