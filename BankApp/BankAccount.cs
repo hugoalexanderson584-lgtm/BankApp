@@ -1,16 +1,41 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+namespace BankApp;
 
-namespace BankApp
+public class BankAccount
 {
-    internal class BankAccount
-    {
-        public int salary { get; set; }
+    public string AccountNumber { get; set; }
+    public int OwnerID { get; set; }
+    public decimal Balance { get; private set; }
+    public Currency Currency { get; set; }
 
-        public BankAccount(int Salary)
+    public BankAccount(string accountNumber, int ownerId, Currency currency)
+    {
+        AccountNumber = accountNumber;
+        OwnerID = ownerId;
+        Currency = currency;
+        Balance = 0m;
+    }
+
+    public bool Deposit(decimal amount)
+    {
+        if (amount <= 0)
         {
-            this.salary = Salary;
+            return false; 
         }
+
+        Balance += amount;
+        return true; 
+
+    }
+    
+    public bool Withdraw(decimal amount)
+    {
+        if (amount <= 0 || amount > Balance)
+        {
+            return false;
+        }
+
+        Balance -= amount;
+        return true;
     }
 }
+
