@@ -1,3 +1,4 @@
+using BankApp.Enums;
 namespace BankApp;
 
 public class BankAccount
