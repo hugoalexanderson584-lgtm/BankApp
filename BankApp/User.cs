@@ -28,12 +28,5 @@ namespace BankApp
         }
     }
 
-    internal class Administrator : User
-    {
-        public Administrator(string Name, string Email, int Salary, string Password)
-            : base(Name, Email, Salary, Password)
-        {
-
-        }
-    }
+    
 }
