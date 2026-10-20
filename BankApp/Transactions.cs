@@ -2,9 +2,10 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Text;
-
+using BankApp.Enums;
 namespace BankApp
 {
+    
     public enum TransactionStatus
     {
         pending,
@@ -12,9 +13,10 @@ namespace BankApp
         failed,
 
     }
-    internal class Transactions
+    public class Transactions
     {
 
+        public Guid Id { get; private set; }
         public string SenderAccountId { get; private set; }
 
         public string ReceiverAccountId { get; private set; }
@@ -25,9 +27,9 @@ namespace BankApp
 
         public TransactionStatus Status { get; private set; }
 
-        //public Currency Currency { get; private set; }
+        public Currency Currency { get; private set; }
 
-        public Transactions(string senderAccountId, string receiverAccountId, decimal amount)
+        public Transactions(string senderAccountId, string receiverAccountId, decimal amount, Currency currency, Guid id)
         {
             // Arguments to make sure the user doesnt do something stupid 
             if (string.IsNullOrWhiteSpace(senderAccountId))
@@ -55,9 +57,27 @@ namespace BankApp
             Amount = amount;
             CreatedAt = DateTime.Now;
             Status = TransactionStatus.pending;
-            //Currency = Currency
+            Currency = currency;
+            Id = id;
         }
-        
+        public void MarkCompleted()
+        {
+            if (Status != TransactionStatus.pending)
+                throw new InvalidOperationException(
+                    "Only pending transactions can be completed.");
+
+            Status = TransactionStatus.completed;
+        }
+
+        public void MarkFailed()
+        {
+            if (Status != TransactionStatus.pending)
+                throw new InvalidOperationException(
+                    "Only pending transactions can be failed.");
+
+            Status = TransactionStatus.failed;
+        }
+
     }
 }
             
