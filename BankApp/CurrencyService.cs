@@ -6,7 +6,7 @@ namespace BankApp
   {
     public Currency Currency { get; set; }
 
-    public decimal GetExchangeRate(Currency from, Currency to)
+    decimal GetExchangeRate(Currency from, Currency to)
     {
 
       if (from == to)
@@ -45,6 +45,21 @@ namespace BankApp
       }
 
       throw new NotSupportedException("Currency not supported");
+    }
+
+    public decimal ConvertCurrency(decimal amount, Currency from, Currency to)
+    {
+      if (amount < 0)
+      {
+        throw new ArgumentOutOfRangeException(
+          nameof(amount),
+          "Amount cannot be negative"
+        );
+      }
+
+      decimal rate = GetExchangeRate(from, to);
+
+      return Math.Round(amount * rate, 2);
     }
   }
 }
