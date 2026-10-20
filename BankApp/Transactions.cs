@@ -13,9 +13,10 @@ namespace BankApp
         failed,
 
     }
-    internal class Transactions
+    public class Transactions
     {
 
+        public Guid Id { get; private set; }
         public string SenderAccountId { get; private set; }
 
         public string ReceiverAccountId { get; private set; }
@@ -28,7 +29,7 @@ namespace BankApp
 
         public Currency Currency { get; private set; }
 
-        public Transactions(string senderAccountId, string receiverAccountId, decimal amount, Currency currency)
+        public Transactions(string senderAccountId, string receiverAccountId, decimal amount, Currency currency, Guid id)
         {
             // Arguments to make sure the user doesnt do something stupid 
             if (string.IsNullOrWhiteSpace(senderAccountId))
@@ -57,6 +58,7 @@ namespace BankApp
             CreatedAt = DateTime.Now;
             Status = TransactionStatus.pending;
             Currency = currency;
+            Id = id;
         }
         public void MarkCompleted()
         {
