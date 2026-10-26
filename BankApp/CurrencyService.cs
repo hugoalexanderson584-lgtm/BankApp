@@ -66,5 +66,16 @@ namespace BankApp
     {
       return Enum.GetValues<Currency>().ToList();
     }
+
+    public void UpdateExchangeRate(Currency from, Currency to, decimal newRate)
+    {
+      if (newRate <= 0)
+      {
+        throw new ArgumentOutOfRangeException(
+          nameof(newRate),
+          "Rate cannot be 0 or negative"
+        );
+      }
+    }
   }
 }
