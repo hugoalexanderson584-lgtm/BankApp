@@ -28,7 +28,7 @@ namespace BankApp
             }
         }
 
-        public void Exit()
+        private void Exit()
         {
             IsRunning = false;
             Console.WriteLine("Application closed");
