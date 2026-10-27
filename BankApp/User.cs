@@ -11,28 +11,22 @@ namespace BankApp
         public int Salary { get; set; }
         public string Password { get; set; }
 
-        public User (string Name, string Email, int Salary, string Password)
+        public User (string name, string email, int salary, string password)
         {
-            this.Name = Name;
-            this.Email = Email;
-            this.Salary = Salary;
-            this.Password = Password;
+            Name = name;
+            Email = email;
+            Salary = salary;
+            Password = password;
         }
 
 
 
-        public void Login()
+        public static void Login()
         {
 
-        }
-    }
-
-    internal class Administrator : User
-    {
-        public Administrator(string Name, string Email, int Salary, string Password)
-            : base(Name, Email, Salary, Password)
-        {
 
         }
     }
+
+    
 }
