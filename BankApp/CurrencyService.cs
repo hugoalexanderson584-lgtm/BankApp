@@ -6,6 +6,13 @@ namespace BankApp
   {
     public Currency Currency { get; set; }
 
+    /// <summary>
+    /// Calculates and converts currencies
+    /// </summary>
+    /// <param name="from">The currency that will be converted</param>
+    /// <param name="to">The new converted currency</param>
+    /// <returns>Returns the converted currency</returns>
+    /// <exception cref="NotSupportedException"></exception>
     decimal GetExchangeRate(Currency from, Currency to)
     {
 
