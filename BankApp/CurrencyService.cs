@@ -77,6 +77,10 @@ namespace BankApp
       return Math.Round(amount * rate, 2);
     }
 
+    /// <summary>
+    /// View which currencies are supported in the application.
+    /// </summary>
+    /// <returns>List of the only supported currencies.</returns>
     public List<Currency> GetSupportedCurrencies()
     {
       return Enum.GetValues<Currency>().ToList();
