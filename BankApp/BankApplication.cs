@@ -6,25 +6,26 @@ namespace BankApp
 {
     internal class BankApplication
     {
-        private bool IsRunning;
+        private bool IsRunning = true;
 
         public void Run()
         {
-            User user = new User("", "", 0, "");
-
             while (IsRunning)
             {
-                Console.WriteLine("Välkommen till banken, tryck '1' för att logga in:");
-
+                Console.Write("Welcome to our bank, press '1' to login: ");
                 string? userInput = Console.ReadLine();
 
                 if (userInput != "1")
                 {
                     Console.WriteLine("Invalid input, please try again");
                     Exit();
+                    return;
                 }
 
-                Console.WriteLine("Skriv in dina inloggningsuppgifter:");
+                Console.WriteLine("Fill in your information");
+
+                // Authentication here
+
             }
         }
 
@@ -32,7 +33,6 @@ namespace BankApp
         {
             IsRunning = false;
             Console.WriteLine("Application closed");
-            return;
         }
     }
 }

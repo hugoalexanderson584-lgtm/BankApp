@@ -103,9 +103,12 @@ namespace BankApp
     /// View which currencies are supported in the application.
     /// </summary>
     /// <returns>List of the only supported currencies.</returns>
-    public List<Currency> GetSupportedCurrencies()
+    public void GetSupportedCurrencies()
     {
-      return Enum.GetValues<Currency>().ToList();
+      foreach (Currency currency in Enum.GetValues<Currency>().ToList())
+      {
+        Console.WriteLine(currency);
+      }
     }
 
     /// <summary>
