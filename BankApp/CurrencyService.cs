@@ -5,6 +5,18 @@ namespace BankApp
   internal class CurrencyService
   {
     public Currency Currency { get; set; }
+    private readonly Dictionary<(Currency, Currency), decimal> _exchangeRates = new Dictionary<(Currency, Currency), decimal>
+    {
+      {
+        (Currency.SEK, Currency.EUR), 0.090m
+      },
+      {
+        (Currency.SEK, Currency.USD), 0.10m
+      },
+      {
+        (Currency.EUR, Currency.USD), 1.12m
+      }
+    };
 
     /// <summary>
     /// Calculates currency rates
@@ -19,6 +31,16 @@ namespace BankApp
       if (from == to)
       {
         return 1m;
+      }
+
+      if (_exchangeRates.TryGetValue((Currency, Currency), out decimal rate))
+      {
+        return rate;
+      }
+
+      if (_exchangeRates.TryGetValue((Currency, Currency), out decimal reverseRate))
+      {
+        return 1m / reverseRate;
       }
 
       // SEK
@@ -86,6 +108,14 @@ namespace BankApp
       return Enum.GetValues<Currency>().ToList();
     }
 
+    /// <summary>
+    /// Available only for admins to update exchange rate.
+    /// </summary>
+    /// <param name="from">The old currency to converted</param>
+    /// <param name="to">The new converted currency</param>
+    /// <param name="newRate">The updated rate</param>
+    /// <exception cref="ArgumentOutOfRangeException"></exception>
+    /// <exception cref="KeyNotFoundException"></exception>
     public void UpdateExchangeRate(Currency from, Currency to, decimal newRate)
     {
       if (newRate <= 0)
@@ -95,6 +125,19 @@ namespace BankApp
           "Rate cannot be 0 or negative"
         );
       }
+
+      if (_exchangeRates.ContainsKey((from, to)))
+      {
+        _exchangeRates[(from, to)] = newRate;
+        return;
+      }
+
+      if (_exchangeRates.ContainsKey((from, to)))
+      {
+        _exchangeRates[(from, to)] = 1m / newRate;
+      }
+
+      throw new KeyNotFoundException("Currency KEY was not found");
     }
   }
 }
