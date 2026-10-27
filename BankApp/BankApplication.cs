@@ -21,17 +21,18 @@ namespace BankApp
                 if (userInput != "1")
                 {
                     Console.WriteLine("Invalid input, please try again");
-                    return;
+                    Exit();
                 }
 
                 Console.WriteLine("Skriv in dina inloggningsuppgifter:");
             }
         }
 
-        public void Stop()
+        public void Exit()
         {
             IsRunning = false;
             Console.WriteLine("Application closed");
+            return;
         }
     }
 }
