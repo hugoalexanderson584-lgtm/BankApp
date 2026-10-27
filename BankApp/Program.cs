@@ -1,17 +1,12 @@
-﻿using BankApp;
-using BankApp.Enums;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Threading;
-using System.Linq;
-using System.Threading.Tasks;
-
-class Program
+﻿namespace BankApp
 {
-    static public void Main(string[] args)
+    internal class Program
     {
-        
+        static void Main(string[] args)
+        {
+            Console.WriteLine("Välkommen till banken, tryck '1' för att logga in:");
+            int input = int.TryParse(Console.ReadLine(), out input);
+        }
     }
 
 }
