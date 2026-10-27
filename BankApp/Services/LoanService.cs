@@ -3,6 +3,7 @@ namespace BankApp
 {
     internal class LoanService
     {
+        // Calculates the interest amount for a loan.
         public Decimal CalculateInterestRate(Loan loan)
 
         {
@@ -10,7 +11,7 @@ namespace BankApp
 
         }
 
-        public bool CanBorraw(decimal availableFunds, decimal borrowAmount)
+        public bool CanBorrow(decimal availableFunds, decimal borrowAmount)
         {
             return availableFunds >= borrowAmount *5 ;
         }
