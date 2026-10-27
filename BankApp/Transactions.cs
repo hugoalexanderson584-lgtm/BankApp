@@ -32,12 +32,12 @@ namespace BankApp
         public Transactions(string senderAccountId, string receiverAccountId, decimal amount, Currency currency, Guid id)
         {
             // Arguments to make sure the user doesnt do something stupid 
-            if (string.IsNullOrWhiteSpace(senderAccountId))
+            if (string.IsNullOrEmpty(senderAccountId))
             {
                 throw new ArgumentException("Sender is required.");
             }
 
-            if (string.IsNullOrWhiteSpace(receiverAccountId))
+            if (string.IsNullOrEmpty(receiverAccountId))
             {
                 throw new ArgumentException("Receiver is required.");
             }

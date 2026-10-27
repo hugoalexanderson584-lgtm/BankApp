@@ -10,4 +10,5 @@ namespace BankApp
             bankApplication.Run();
         }
     }
+
 }
