@@ -1,15 +1,21 @@
-﻿using System;
+﻿using BankApp.Enums;
+using System;
 using System.Collections.Generic;
+using System.Security.Principal;
 using System.Text;
 using System.Transactions;
-using BankApp.Enums;
 namespace BankApp
 {
     public class TransferService
     {
         private readonly List<Transactions> _Transactions = new();
+        private readonly List<BankAccount> _BankAccounts = new();
+        public TransferService(List<BankAccount> accounts)
+        {
+            _BankAccounts = accounts;
+        }
 
-        
+
 
         public Transactions CreateTransaction(string senderAccountId, string receiverAccountId, decimal amount, Currency currency, Guid id)
         {
@@ -31,6 +37,11 @@ namespace BankApp
         public Transactions GetTransaction(Guid id)
         {
             return _Transactions.FirstOrDefault(t => t.Id == id);
+        }
+
+        public void TransferMoney(string senderAccountId, string receiverAccountId, decimal amount, Currency currency, Guid id)
+        {
+            
         }
 
     }

@@ -7,7 +7,7 @@ namespace BankApp
     internal class BankApplication
     {
 
-        bool Isrunning;
+        bool Isrunning = true;
 
         
         public void Run()
