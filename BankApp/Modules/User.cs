@@ -11,22 +11,12 @@ namespace BankApp
         public int Salary { get; set; }
         public string Password { get; set; }
 
-        public User (string name, string email, int salary, string password)
+        public User(string name, string email, int salary, string password)
         {
             Name = name;
             Email = email;
             Salary = salary;
             Password = password;
         }
-
-
-
-        public static void Login()
-        {
-
-
-        }
     }
-
-    
 }
