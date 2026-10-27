@@ -7,11 +7,11 @@ namespace BankApp
     public Currency Currency { get; set; }
 
     /// <summary>
-    /// Calculates and converts currencies
+    /// Calculates currency rates
     /// </summary>
     /// <param name="from">The currency that will be converted</param>
-    /// <param name="to">The new converted currency</param>
-    /// <returns>Returns the converted currency</returns>
+    /// <param name="to">The new currency rate</param>
+    /// <returns>Currency rate</returns>
     /// <exception cref="NotSupportedException"></exception>
     decimal GetExchangeRate(Currency from, Currency to)
     {
@@ -54,6 +54,14 @@ namespace BankApp
       throw new NotSupportedException("Currency not supported");
     }
 
+    /// <summary>
+    /// Converts currencies
+    /// </summary>
+    /// <param name="amount">The money amount</param>
+    /// <param name="from">The currency to convert from</param>
+    /// <param name="to">The currency to convert to</param>
+    /// <returns>Converted amount as the new currency</returns>
+    /// <exception cref="ArgumentOutOfRangeException"></exception>
     public decimal ConvertCurrency(decimal amount, Currency from, Currency to)
     {
       if (amount < 0)
