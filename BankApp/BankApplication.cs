@@ -6,14 +6,14 @@ namespace BankApp
 
     private void DisplayAccounts(Customer customer)
     {
+      if (customer.Accounts.Count == 0)
+      {
+        Console.WriteLine("You do not have any accounts yet.");
+        return;
+      }
+
       for (int i = 0; i < customer.Accounts.Count; i++)
       {
-        if (customer.Accounts.Count == 0)
-        {
-          Console.WriteLine("You do not have any accounts yet.");
-          break;
-        }
-
         Console.WriteLine($"{i + 1}. {customer.Accounts[i].accountName}");
       }
     }
