@@ -1,0 +1,1 @@
+This folder should only contain data-only classes.

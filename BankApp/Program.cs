@@ -1,10 +1,14 @@
-﻿namespace BankApp;
-
-internal class Program
+﻿
+namespace BankApp
 {
-    private static void Main(string[] args)
+    internal class Program
     {
-        BankApplication app = new BankApplication();
-        app.Run();
+        static void Main(string[] args)
+        {
+            BankApplication bankApplication = new BankApplication();
+
+            bankApplication.Run();
+        }
     }
+
 }
