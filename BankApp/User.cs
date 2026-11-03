@@ -24,7 +24,6 @@ namespace BankApp
         public static void Login()
         {
 
-
         }
     }
 
