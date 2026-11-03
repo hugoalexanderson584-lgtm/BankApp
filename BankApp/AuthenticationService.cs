@@ -28,12 +28,12 @@ namespace BankApp
     {
         private const int MaxAttempts = 3;
 
-        public Guid Id { get; } = Guid.NewGuid();
+        public int OwnerId { get; set; }
         public string Name { get; }
         public string UserName { get; }
         private string _pin;
 
-        public List<Account> Accounts { get; } = new();
+        public List<BankAccount> Accounts { get; } = new();
         public int FailedAttempts { get; private set; }
 
         public bool IsLocked => FailedAttempts >= MaxAttempts;
@@ -59,7 +59,7 @@ namespace BankApp
             return false;
         }
 
-        public void AddAccount(Account account) => Accounts.Add(account);
+        public void AddAccount(BankAccount account) => Accounts.Add(account);
     }
 }
 
