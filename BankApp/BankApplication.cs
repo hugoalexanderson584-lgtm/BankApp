@@ -1,24 +1,33 @@
-namespace BankApp
+﻿namespace BankApp
 {
   internal class BankApplication
   {
     private bool IsRunning = true;
 
-    private void DisplayAccounts(Customer customer, AccountService accountService)
+    private bool DisplayAccounts(Customer customer, AccountService accountService)
     {
       List<BankAccount> accounts = accountService.GetAccountsForUser(customer.OwnerId);
 
       if (accounts.Count == 0)
       {
         Console.WriteLine("You do not have any accounts yet.");
-        return;
+        return false;
       }
 
-      for (int i = 0; i < accounts.Count; i++)
+      foreach (BankAccount account in accounts)
       {
-        BankAccount account = accounts[i];
-        Console.WriteLine($"{i + 1}. {account.AccountNumber} - {account.Balance} {account.Currency}");
+        Console.WriteLine($"Account {account.AccountNumber} - Balance: {account.Balance:N2} {account.Currency}");
       }
+
+      return true;
+    }
+
+    private void WriteColored(string text, ConsoleColor color)
+    {
+      ConsoleColor previousColor = Console.ForegroundColor;
+      Console.ForegroundColor = color;
+      Console.WriteLine(text);
+      Console.ForegroundColor = previousColor;
     }
 
     public void Run()
@@ -51,287 +60,389 @@ namespace BankApp
 
       int nextAccountNumber = 1;
 
-      while (IsRunning)
+      using CancellationTokenSource cancellation = new CancellationTokenSource();
+      Task processor = transferService.RunProcessingLoopAsync(cancellation.Token);
+
+      try
       {
-        Console.WriteLine("Fill in your information.");
 
-        Console.Write("Name: ");
-        string? userName = Console.ReadLine();
-
-        Console.Write("Pin: ");
-        string? userPin = Console.ReadLine();
-
-        Customer? loggedCustomer = authenticationService.Login(userName, userPin);
-
-        if (loggedCustomer == null)
+        while (IsRunning)
         {
-          Console.WriteLine("Login failed. Incorrect username or PIN.");
-          continue;
-        }
+          Console.Clear();
+          WriteColored(@"
+  ██████╗  █████╗ ███╗   ██╗██╗  ██╗
+  ██╔══██╗██╔══██╗████╗  ██║██║ ██╔╝
+  ██████╔╝███████║██╔██╗ ██║█████╔╝
+  ██╔══██╗██╔══██║██║╚██╗██║██╔═██╗
+  ██████╔╝██║  ██║██║ ╚████║██║  ██╗
+  ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═══╝╚═╝  ╚═╝
+        ", ConsoleColor.Yellow);
 
+          Console.WriteLine("Fill in your information.");
 
-        bool loggedIn = true;
-        while (loggedIn && IsRunning)
-        {
-          Console.WriteLine("1. View My Accounts.");
-          Console.WriteLine("2. Check Account Balance.");
-          Console.WriteLine("3. Deposit Money.");
-          Console.WriteLine("4. Withdraw Money.");
-          Console.WriteLine("5. Transfer Money.");
-          Console.WriteLine("6. Transaction History.");
-          Console.WriteLine("7. Create New Bank Account.");
-          Console.WriteLine("8. Estimate Loan Interest.");
-          Console.WriteLine("9. View My Loans.");
-          Console.WriteLine("10. Currency Exchange.");
-          Console.WriteLine("11. Logout.");
-          Console.WriteLine("12. Exit.");
+          Console.Write("Name: ");
+          string? userName = Console.ReadLine();
 
-          Console.Write("Choose action: ");
-          string? userAction = Console.ReadLine();
+          Console.Write("Pin: ");
+          string? userPin = Console.ReadLine();
 
-          switch (userAction)
+          Customer? loggedCustomer = authenticationService.Login(userName, userPin);
+
+          if (loggedCustomer == null)
           {
-            case "1":
-              {
-                DisplayAccounts(loggedCustomer, accountService);
-                break;
-              }
+            Customer? customer = customers.FirstOrDefault(customer => customer.UserName == userName);
 
-            case "2":
-              {
-                DisplayAccounts(loggedCustomer, accountService);
+            if (customer != null && customer.IsLocked)
+            {
+              Console.WriteLine("Your account is locked after three failed attempts.");
+            }
+            else
+            {
+              Console.WriteLine("Incorrect username or PIN.");
+            }
 
-                Console.Write("Enter account number: ");
-                string? accountNumber = Console.ReadLine();
+            continue;
+          }
 
-                BankAccount? account = accountService
-                  .GetAccountsForUser(loggedCustomer.OwnerId)
-                  .FirstOrDefault(account => account.AccountNumber == accountNumber);
+          // TODO
+          /* if (loggedCustomer == "Admin")
+          {
+            Console.WriteLine("1. Create User.");
+            Console.WriteLine("2. Delete User.");
+            Console.WriteLine("3. Update Exchange Rate.");
+          }
+          */
 
-                if (account == null)
+          bool loggedIn = true;
+          while (loggedIn && IsRunning)
+          {
+            Console.Clear();
+            WriteColored("<============ BANK MENU ============>", ConsoleColor.Yellow);
+
+            Console.WriteLine("\n[1] View My Accounts.");
+            Console.WriteLine("[2] Check Account Balance.");
+            Console.WriteLine("[3] Deposit Money.");
+            Console.WriteLine("[4] Withdraw Money.");
+            Console.WriteLine("[5] Transfer Money.");
+            Console.WriteLine("[6] Transaction History.");
+            Console.WriteLine("[7] Create New Bank Account.");
+            Console.WriteLine("[8] Estimate Loan Interest.");
+            Console.WriteLine("[9] View My Loans.");
+            Console.WriteLine("[10] Currency Exchange.");
+
+            WriteColored("\n[11] Logout   [12] Exit", ConsoleColor.Yellow);
+
+            Console.Write("\nEnter option: ");
+            string? userAction = Console.ReadLine();
+
+            switch (userAction)
+            {
+              case "1":
                 {
-                  Console.WriteLine("Account not found.");
+                  DisplayAccounts(loggedCustomer, accountService);
                   break;
                 }
 
-                Console.WriteLine($"Balance: {account.Balance} {account.Currency}");
-                break;
-              }
+              case "2":
+                {
+                  bool isDisplayed = DisplayAccounts(loggedCustomer, accountService);
+                  if (!isDisplayed) break;
 
-            case "3":
-              {
-                DisplayAccounts(loggedCustomer, accountService);
+                  Console.Write("Enter account number: ");
+                  string? accountNumber = Console.ReadLine();
 
-                Console.Write("Enter account number: ");
-                string? accountNumber = Console.ReadLine();
-
-                BankAccount? account = accountService
+                  BankAccount? account = accountService
                     .GetAccountsForUser(loggedCustomer.OwnerId)
                     .FirstOrDefault(account => account.AccountNumber == accountNumber);
 
-                if (account == null)
-                {
-                  Console.WriteLine("Account not found.");
+                  if (account == null)
+                  {
+                    Console.WriteLine("Account not found.");
+                    break;
+                  }
+
+                  Console.WriteLine($"Balance: {account.Balance} {account.Currency}");
                   break;
                 }
 
-                Console.Write("Amount to deposit: ");
-
-                if (decimal.TryParse(Console.ReadLine(), out decimal amount)
-                    && account.Deposit(amount))
+              case "3":
                 {
-                  Console.WriteLine("Deposit successful.");
-                }
-                else
-                {
-                  Console.WriteLine("Invalid deposit amount.");
-                }
+                  bool isDisplayed = DisplayAccounts(loggedCustomer, accountService);
+                  if (!isDisplayed) break;
 
-                break;
-              }
+                  Console.Write("Enter account number: ");
+                  string? accountNumber = Console.ReadLine();
 
-            case "4":
-              {
-                DisplayAccounts(loggedCustomer, accountService);
+                  BankAccount? account = accountService
+                      .GetAccountsForUser(loggedCustomer.OwnerId)
+                      .FirstOrDefault(account => account.AccountNumber == accountNumber);
 
-                Console.Write("Enter account number: ");
-                string? accountNumber = Console.ReadLine();
+                  if (account == null)
+                  {
+                    Console.WriteLine("Account not found.");
+                    break;
+                  }
 
-                BankAccount? account = accountService
-                    .GetAccountsForUser(loggedCustomer.OwnerId)
-                    .FirstOrDefault(account => account.AccountNumber == accountNumber);
+                  Console.Write("Amount to deposit: ");
 
-                if (account == null)
-                {
-                  Console.WriteLine("Account not found.");
+                  if (decimal.TryParse(Console.ReadLine(), out decimal amount)
+                      && account.Deposit(amount))
+                  {
+                    Console.WriteLine("Deposit successful.");
+                  }
+                  else
+                  {
+                    Console.WriteLine("Invalid deposit amount.");
+                  }
+
                   break;
                 }
 
-                Console.Write("Amount to withdraw: ");
-
-                if (decimal.TryParse(Console.ReadLine(), out decimal amount)
-                    && account.Withdraw(amount))
+              case "4":
                 {
-                  Console.WriteLine("Withdrawal successful.");
-                }
-                else
-                {
-                  Console.WriteLine("Withdrawal failed. Check the amount and balance.");
-                }
+                  bool isDisplayed = DisplayAccounts(loggedCustomer, accountService);
+                  if (!isDisplayed) break;
 
-                break;
-              }
+                  Console.Write("Enter account number: ");
+                  string? accountNumber = Console.ReadLine();
 
-            case "5":
-              {
-                // TODO
-                break;
-              }
+                  BankAccount? account = accountService
+                      .GetAccountsForUser(loggedCustomer.OwnerId)
+                      .FirstOrDefault(account => account.AccountNumber == accountNumber);
 
-            case "6":
-              {
-                if (File.Exists("transaction-history.log"))
-                {
-                  Console.WriteLine(File.ReadAllText("transaction-history.log"));
-                }
-                else
-                {
-                  Console.WriteLine("No transaction history is available.");
-                }
+                  if (account == null)
+                  {
+                    Console.WriteLine("Account not found.");
+                    break;
+                  }
 
-                break;
-              }
+                  Console.Write("Amount to withdraw: ");
 
-            case "7":
-              {
-                Console.Write("Currency (SEK, EUR, USD): ");
+                  if (decimal.TryParse(Console.ReadLine(), out decimal amount)
+                      && account.Withdraw(amount))
+                  {
+                    Console.WriteLine("Withdrawal successful.");
+                  }
+                  else
+                  {
+                    Console.WriteLine("Withdrawal failed. Check the amount and balance.");
+                  }
 
-                if (!Enum.TryParse(Console.ReadLine(), true, out Enums.Currency currency)
-                  || !Enum.IsDefined(currency))
-                {
-                  Console.WriteLine("Unsupported currency.");
                   break;
                 }
 
-                BankAccount newAccount = accountService.CreateAccount(
-                    nextAccountNumber.ToString(),
-                    loggedCustomer.OwnerId,
-                    currency
-                );
-
-                nextAccountNumber++;
-
-                loggedCustomer.AddAccount(newAccount);
-                bankAccounts.Add(newAccount);
-
-                Console.WriteLine($"Created account {newAccount.AccountNumber} in {newAccount.Currency}.");
-
-                break;
-              }
-
-            case "8":
-              {
-                Console.Write("Loan amount for an interest estimate: ");
-
-                if (!decimal.TryParse(Console.ReadLine(), out decimal borrowAmount)
-                    || borrowAmount <= 0)
+              case "5":
                 {
-                  Console.WriteLine("Enter a valid amount greater than zero.");
+                  bool isDisplayed = DisplayAccounts(loggedCustomer, accountService);
+                  if (!isDisplayed) break;
+
+                  Console.Write("Sender account number: ");
+                  string? senderNumber = Console.ReadLine();
+
+                  BankAccount? sender = accountService
+                      .GetAccountsForUser(loggedCustomer.OwnerId)
+                      .FirstOrDefault(account => account.AccountNumber == senderNumber);
+
+                  if (sender == null)
+                  {
+                    Console.WriteLine("Sender account not found.");
+                    break;
+                  }
+
+                  Console.Write("Receiver account number: ");
+                  string receiverNumber = (Console.ReadLine() ?? "").Trim();
+
+                  Console.Write("Amount to transfer: ");
+
+                  if (!decimal.TryParse(Console.ReadLine(), out decimal amount)
+                      || amount <= 0)
+                  {
+                    Console.WriteLine("Enter a valid amount greater than zero.");
+                    break;
+                  }
+
+                  if (amount > sender.Balance)
+                  {
+                    Console.WriteLine("Insufficient funds.");
+                    break;
+                  }
+
+                  try
+                  {
+                    transferService.TransferMoney(
+                        sender.AccountNumber,
+                        receiverNumber,
+                        amount,
+                        sender.Currency,
+                        Guid.NewGuid());
+
+                    Console.WriteLine("Transfer queued for processing.");
+                  }
+                  catch (ArgumentException ex)
+                  {
+                    Console.WriteLine($"Transfer failed: {ex.Message}");
+                  }
+
                   break;
                 }
 
-                Console.Write("Interest rate in percent (enter 5 for 5%): ");
-
-                if (!decimal.TryParse(Console.ReadLine(), out decimal interestPercent)
-                    || interestPercent < 0)
+              case "6":
                 {
-                  Console.WriteLine("Enter a valid non-negative interest rate.");
+                  if (File.Exists("transaction-history.log"))
+                  {
+                    Console.WriteLine(File.ReadAllText("transaction-history.log"));
+                  }
+                  else
+                  {
+                    Console.WriteLine("No transaction history is available.");
+                  }
+
                   break;
                 }
 
-                Loan loan = new Loan(borrowAmount, interestPercent / 100m);
-
-                Console.WriteLine(
-                    $"Estimated interest: {loanService.CalculateInterestRate(loan)}.");
-
-                Console.WriteLine("This does not submit a loan application.");
-                break;
-              }
-
-            case "9":
-              {
-                Console.WriteLine("Loan applications and loan records are not stored yet.");
-                // TODO
-                break;
-              }
-
-            case "10":
-              {
-                currencyService.GetSupportedCurrencies();
-
-                Console.Write("Amount to convert: ");
-
-                if (!decimal.TryParse(Console.ReadLine(), out decimal amount)
-                    || amount < 0)
+              case "7":
                 {
-                  Console.WriteLine("Enter a valid non-negative amount.");
+                  Console.Write("Currency (SEK, EUR, USD): ");
+
+                  if (!Enum.TryParse(Console.ReadLine(), true, out Enums.Currency currency)
+                    || !Enum.IsDefined(currency))
+                  {
+                    Console.WriteLine("Unsupported currency.");
+                    break;
+                  }
+
+                  BankAccount newAccount = accountService.CreateAccount(
+                      nextAccountNumber.ToString(),
+                      loggedCustomer.OwnerId,
+                      currency
+                  );
+
+                  nextAccountNumber++;
+
+                  loggedCustomer.AddAccount(newAccount);
+                  bankAccounts.Add(newAccount);
+
+                  Console.WriteLine($"Created account {newAccount.AccountNumber} in {newAccount.Currency}.");
+
                   break;
                 }
 
-                Console.Write("From currency: ");
-
-                if (!Enum.TryParse(Console.ReadLine(), true, out Enums.Currency from)
-                    || !Enum.IsDefined(from))
+              case "8":
                 {
-                  Console.WriteLine("Unsupported currency.");
+                  Console.Write("Loan amount for an interest estimate: ");
+
+                  if (!decimal.TryParse(Console.ReadLine(), out decimal borrowAmount)
+                      || borrowAmount <= 0)
+                  {
+                    Console.WriteLine("Enter a valid amount greater than zero.");
+                    break;
+                  }
+
+                  Console.Write("Interest rate in percent (enter 5 for 5%): ");
+
+                  if (!decimal.TryParse(Console.ReadLine(), out decimal interestPercent)
+                      || interestPercent < 0)
+                  {
+                    Console.WriteLine("Enter a valid non-negative interest rate.");
+                    break;
+                  }
+
+                  Loan loan = new Loan(borrowAmount, interestPercent / 100m);
+
+                  Console.WriteLine(
+                      $"Estimated interest: {loanService.CalculateInterestRate(loan)}.");
+
+                  Console.WriteLine("This does not submit a loan application.");
                   break;
                 }
 
-                Console.Write("To currency: ");
-
-                if (!Enum.TryParse(Console.ReadLine(), true, out Enums.Currency to)
-                    || !Enum.IsDefined(to))
+              case "9":
                 {
-                  Console.WriteLine("Unsupported currency.");
+                  Console.WriteLine("Loan applications and loan records are not stored yet.");
+
                   break;
                 }
 
-                try
+              case "10":
                 {
-                  decimal convertedAmount = currencyService.ConvertCurrency(amount, from, to);
+                  currencyService.GetSupportedCurrencies();
 
-                  Console.WriteLine($"Converted amount: {convertedAmount} {to}");
+                  Console.Write("Amount to convert: ");
+
+                  if (!decimal.TryParse(Console.ReadLine(), out decimal amount)
+                      || amount < 0)
+                  {
+                    Console.WriteLine("Enter a valid non-negative amount.");
+                    break;
+                  }
+
+                  Console.Write("From currency: ");
+
+                  if (!Enum.TryParse(Console.ReadLine(), true, out Enums.Currency from)
+                      || !Enum.IsDefined(from))
+                  {
+                    Console.WriteLine("Unsupported currency.");
+                    break;
+                  }
+
+                  Console.Write("To currency: ");
+
+                  if (!Enum.TryParse(Console.ReadLine(), true, out Enums.Currency to)
+                      || !Enum.IsDefined(to))
+                  {
+                    Console.WriteLine("Unsupported currency.");
+                    break;
+                  }
+
+                  try
+                  {
+                    decimal convertedAmount = currencyService.ConvertCurrency(amount, from, to);
+
+                    Console.WriteLine($"Converted amount: {convertedAmount} {to}");
+                  }
+                  catch (NotSupportedException ex)
+                  {
+                    Console.WriteLine(ex.Message);
+                  }
+
+                  break;
                 }
-                catch (NotSupportedException ex)
+
+              case "11":
                 {
-                  Console.WriteLine(ex.Message);
+                  loggedIn = false;
+                  Console.WriteLine("Logged out.");
+                  break;
                 }
 
-                break;
-              }
+              case "12":
+                {
+                  loggedIn = false;
+                  IsRunning = false;
+                  break;
+                }
 
-            case "11":
-              {
-                loggedIn = false;
-                Console.WriteLine("Logged out.");
-                break;
-              }
+              default:
+                {
+                  Console.WriteLine("Unknown action.");
+                  break;
+                }
+            }
 
-            case "12":
-              {
-                loggedIn = false;
-                IsRunning = false;
-                break;
-              }
-
-            default:
-              {
-                Console.WriteLine("Unknown action.");
-                break;
-              }
+            if (loggedIn && IsRunning)
+            {
+              Console.Write("\nPress Enter to return to the menu...");
+              Console.ReadLine();
+            }
           }
         }
+      }
+      finally
+      {
+        cancellation.Cancel();
+        processor.GetAwaiter().GetResult();
       }
     }
   }
 }
+

@@ -33,44 +33,14 @@ namespace BankApp
         return 1m;
       }
 
-      if (_exchangeRates.TryGetValue((Currency, Currency), out decimal rate))
+      if (_exchangeRates.TryGetValue((from, to), out decimal rate))
       {
         return rate;
       }
 
-      if (_exchangeRates.TryGetValue((Currency, Currency), out decimal reverseRate))
+      if (_exchangeRates.TryGetValue((to, from), out decimal reverseRate))
       {
         return 1m / reverseRate;
-      }
-
-      // SEK
-      if (from == Currency.SEK && to == Currency.EUR)
-      {
-        return 0.090m;
-      }
-      if (from == Currency.SEK && to == Currency.USD)
-      {
-        return 0.10m;
-      }
-
-      // EUR
-      if (from == Currency.EUR && to == Currency.SEK)
-      {
-        return 1m / 0.090m;
-      }
-      if (from == Currency.EUR && to == Currency.USD)
-      {
-        return 1.12m;
-      }
-
-      // USD
-      if (from == Currency.USD && to == Currency.SEK)
-      {
-        return 1m / 0.10m;
-      }
-      if (from == Currency.USD && to == Currency.EUR)
-      {
-        return 1m / 1.12m;
       }
 
       throw new NotSupportedException("Currency not supported");
@@ -135,7 +105,7 @@ namespace BankApp
         return;
       }
 
-      if (_exchangeRates.ContainsKey((from, to)))
+      if (_exchangeRates.ContainsKey((to, from)))
       {
         _exchangeRates[(from, to)] = 1m / newRate;
       }
