@@ -116,6 +116,8 @@
           bool loggedIn = true;
           while (loggedIn && IsRunning)
           {
+            bool hasAccounts = accountService.GetAccountsForUser(loggedCustomer.OwnerId).Count > 0;
+
             Console.Clear();
             WriteColored("<============ BANK MENU ============>", ConsoleColor.Yellow);
 
@@ -125,7 +127,18 @@
             Console.WriteLine("[4] Withdraw Money.");
             Console.WriteLine("[5] Transfer Money.");
             Console.WriteLine("[6] Transaction History.");
-            Console.WriteLine("[7] Create New Bank Account.");
+
+            if (hasAccounts)
+            {
+              Console.WriteLine("[7] Create New Bank Account.");
+            }
+            else
+            {
+              WriteColored(
+                  "[7] Create New Bank Account. (Start here)",
+                  ConsoleColor.Yellow);
+            }
+
             Console.WriteLine("[8] Estimate Loan Interest.");
             Console.WriteLine("[9] View My Loans.");
             Console.WriteLine("[10] Currency Exchange.");

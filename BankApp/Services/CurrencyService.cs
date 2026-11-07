@@ -107,7 +107,7 @@ namespace BankApp
 
       if (_exchangeRates.ContainsKey((to, from)))
       {
-        _exchangeRates[(from, to)] = 1m / newRate;
+        _exchangeRates[(to, from)] = 1m / newRate;
       }
 
       throw new KeyNotFoundException("Currency KEY was not found");
