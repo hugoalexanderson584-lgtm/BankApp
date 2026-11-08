@@ -2,7 +2,7 @@
 
 namespace BankApp
 {
-  internal class CurrencyService
+  public class CurrencyService
   {
     public Currency Currency { get; set; }
     private readonly Dictionary<(Currency, Currency), decimal> _exchangeRates = new Dictionary<(Currency, Currency), decimal>
