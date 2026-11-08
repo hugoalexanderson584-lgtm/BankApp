@@ -146,8 +146,7 @@ public class TransferService
     public async Task RunProcessingLoopAsync(
         CancellationToken cancellationToken)
     {
-        using var timer = new PeriodicTimer(
-            TimeSpan.FromMinutes(15));
+        using var timer = new PeriodicTimer(TimeSpan.FromMinutes(15));
 
         _logger.Log("15-minute transaction processor started.");
 
@@ -170,9 +169,9 @@ public class TransferService
     {
         _logger.Log(message);
     }
-
-    public void ShowTransferMenu()
-    {
+    // made a menu for the transfers but it wasnt needed but i decided to leave it as a comment incase we need it.
+    //public void ShowTransferMenu()
+   /* {
         bool running = true;
 
         while (running)
@@ -259,7 +258,7 @@ public class TransferService
                     break;
             }
         }
-    }
+    }*/
 
 
 }
