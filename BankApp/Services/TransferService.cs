@@ -77,28 +77,17 @@ public class TransferService
             throw new ArgumentException(
                 "Currency must match both accounts.");
 
-        var transaction = CreateTransaction(
-            senderAccountId,
-            receiverAccountId,
-            amount,
-            currency,
-            id);
+        var transaction = CreateTransaction(senderAccountId, receiverAccountId, amount, currency, id);
 
-        _logger.Log(
-            $"Transfer created | ID: {id} | " +
-            $"{senderAccountId} -> {receiverAccountId} | " +
-            $"{amount} {currency} | Status: pending");
+        _logger.Log($"Transfer created | ID: {id} | " + $"{senderAccountId} -> {receiverAccountId} | " +  $"{amount} {currency} | Status: pending");
     }
 
     // Called only when the timer ticks.
     public void ProcessPendingTransactions()
     {
-        var pendingTransactions = _transactions
-            .Where(t => t.Status == TransactionStatus.pending)
-            .ToList();
+        var pendingTransactions = _transactions.Where(t => t.Status == TransactionStatus.pending).ToList();
 
-        _logger.Log(
-            $"Timer tick: processing {pendingTransactions.Count} pending transfer(s).");
+        _logger.Log($"Timer tick: processing {pendingTransactions.Count} pending transfer(s).");
 
         foreach (var transaction in pendingTransactions)
         {
@@ -148,9 +137,7 @@ public class TransferService
             {
                 transaction.MarkFailed();
 
-                _logger.Log(
-                    $"Transfer failed | ID: {transaction.Id} | " +
-                    $"Reason: {ex.Message}");
+                _logger.Log( $"Transfer failed | ID: {transaction.Id} | " + $"Reason: {ex.Message}");
             }
         }
     }
@@ -160,7 +147,7 @@ public class TransferService
         CancellationToken cancellationToken)
     {
         using var timer = new PeriodicTimer(
-            TimeSpan.FromSeconds(30));
+            TimeSpan.FromMinutes(15));
 
         _logger.Log("15-minute transaction processor started.");
 
