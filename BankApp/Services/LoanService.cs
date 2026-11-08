@@ -26,5 +26,31 @@ namespace BankApp
 
             return borrowAmount <= availableFunds * 5;
         }
+
+        // Creates a loan and deposits the money into the customer's account.
+        public (decimal LoanAmount, decimal InterestCost)? TakeLoan(
+            BankAccount account, decimal borrowAmount, decimal interestRate)
+        {
+            if (account == null)
+            {
+                throw new ArgumentNullException(nameof(account));
+            }
+
+            if (!CanBorrow(account.Balance, borrowAmount) || interestRate < 0)
+            {
+                return null;
+            }
+
+            Loan loan = new Loan(borrowAmount, interestRate);
+
+            decimal interestCost = CalculateInterestRate(loan);
+
+            if (!account.Deposit(loan.BorrowAmount))
+            {
+                return null;
+            }
+
+            return (loan.BorrowAmount, interestCost);
+        }
     }
 }
