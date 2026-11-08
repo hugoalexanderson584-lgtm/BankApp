@@ -5,18 +5,21 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
 public class TransferService
 {
+    private readonly CurrencyService _currencyConverter;
     private readonly List<Transactions> _transactions = new();
     private readonly List<BankAccount> _bankAccounts;
     private readonly TransactionLogger _logger = new();
 
-    public TransferService(List<BankAccount> accounts)
+    public TransferService(List<BankAccount> accounts, CurrencyService currencyConverter)
     {
         _bankAccounts = accounts;
+        _currencyConverter = currencyConverter;
     }
 
     public Transactions CreateTransaction(
@@ -72,10 +75,8 @@ public class TransferService
         if (receiver == null)
             throw new ArgumentException("Receiver account not found.");
 
-        if (sender.Currency != currency ||
-            receiver.Currency != currency)
-            throw new ArgumentException(
-                "Currency must match both accounts.");
+        if (sender.Currency != currency)
+            throw new ArgumentException("Transaction currency must match the sender's account.");
 
         var transaction = CreateTransaction(senderAccountId, receiverAccountId, amount, currency, id);
 
@@ -91,6 +92,7 @@ public class TransferService
 
         foreach (var transaction in pendingTransactions)
         {
+            
             try
             {
                 var sender = _bankAccounts.FirstOrDefault(
@@ -103,24 +105,29 @@ public class TransferService
                     throw new InvalidOperationException(
                         "An account could not be found.");
 
-                if (sender.Currency != transaction.Currency ||
-                    receiver.Currency != transaction.Currency)
-                    throw new InvalidOperationException(
-                        "Account currency does not match transaction currency.");
+                if (sender.Currency != transaction.Currency)
+                    throw new InvalidOperationException("Transaction currency does not match sender account.");
 
                 if (sender.Balance < transaction.Amount)
                     throw new InvalidOperationException(
                         "Insufficient funds.");
 
                 // Withdraw the money first.
+                // Withdraw the original amount from the sender.
                 if (!sender.Withdraw(transaction.Amount))
                     throw new InvalidOperationException(
                         "Withdrawal failed.");
 
-                // Deposit into the receiver.
-                if (!receiver.Deposit(transaction.Amount))
+                // Convert the amount to the receiver's currency.
+                decimal convertedAmount = _currencyConverter.ConvertCurrency(
+                    transaction.Amount,
+                    sender.Currency,
+                    receiver.Currency);
+
+                // Deposit the converted amount into the receiver.
+                if (!receiver.Deposit(convertedAmount))
                 {
-                    // Reverse the withdrawal if the deposit fails.
+                    // Refund the original amount to the sender.
                     sender.Deposit(transaction.Amount);
 
                     throw new InvalidOperationException(
@@ -130,8 +137,11 @@ public class TransferService
                 transaction.MarkCompleted();
 
                 _logger.Log(
-                    $"Transfer completed | ID: {transaction.Id} | " +
-                    $"{transaction.Amount} {transaction.Currency}");
+                    $"Transfer completed | ID: {transaction.Id}");
+                _logger.Log(
+    $"Transfer completed | ID: {transaction.Id} | " +
+    $"Sent: {transaction.Amount} {sender.Currency} | " +
+    $"Received: {convertedAmount} {receiver.Currency}");
             }
             catch (Exception ex)
             {

@@ -54,8 +54,8 @@
 
       AccountService accountService = new();
       List<BankAccount> bankAccounts = new();
-      TransferService transferService = new(bankAccounts);
       CurrencyService currencyService = new();
+      TransferService transferService = new(bankAccounts, currencyService);
       LoanService loanService = new LoanService();
 
       int nextAccountNumber = 1;
