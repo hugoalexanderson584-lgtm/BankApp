@@ -134,16 +134,13 @@
             }
             else
             {
-              WriteColored(
-                  "[7] Create New Bank Account. (Start here)",
-                  ConsoleColor.Yellow);
+              WriteColored("[7] Create New Bank Account. (Start here)", ConsoleColor.Yellow);
             }
 
             Console.WriteLine("[8] Estimate Loan Interest.");
-            Console.WriteLine("[9] View My Loans.");
-            Console.WriteLine("[10] Currency Exchange.");
+            Console.WriteLine("[9] Currency Exchange.");
 
-            WriteColored("\n[11] Logout   [12] Exit", ConsoleColor.Yellow);
+            WriteColored("\n[10] Logout   [11] Exit", ConsoleColor.Yellow);
 
             Console.Write("\nEnter option: ");
             string? userAction = Console.ReadLine();
@@ -342,10 +339,25 @@
 
               case "8":
                 {
-                  Console.Write("Loan amount for an interest estimate: ");
+                  bool isDisplayed = DisplayAccounts(loggedCustomer, accountService);
+                  if (!isDisplayed) break;
 
-                  if (!decimal.TryParse(Console.ReadLine(), out decimal borrowAmount)
-                      || borrowAmount <= 0)
+                  Console.Write("Account number to receive the loan: ");
+                  string? accountNumber = Console.ReadLine();
+
+                  BankAccount? account = accountService
+                    .GetAccountsForUser(loggedCustomer.OwnerId)
+                    .FirstOrDefault(account => account.AccountNumber == accountNumber);
+
+                  if (account == null)
+                  {
+                    Console.WriteLine("Account not found.");
+                    break;
+                  }
+
+                  Console.Write("Loan amount: ");
+
+                  if (!decimal.TryParse(Console.ReadLine(), out decimal borrowAmount) || borrowAmount <= 0)
                   {
                     Console.WriteLine("Enter a valid amount greater than zero.");
                     break;
@@ -353,30 +365,28 @@
 
                   Console.Write("Interest rate in percent (enter 5 for 5%): ");
 
-                  if (!decimal.TryParse(Console.ReadLine(), out decimal interestPercent)
-                      || interestPercent < 0)
+                  if (!decimal.TryParse(Console.ReadLine(), out decimal interestPercent) || interestPercent < 0)
                   {
                     Console.WriteLine("Enter a valid non-negative interest rate.");
                     break;
                   }
 
-                  Loan loan = new Loan(borrowAmount, interestPercent / 100m);
+                  var result = loanService.TakeLoan(account, borrowAmount, interestPercent / 100m);
 
-                  Console.WriteLine(
-                      $"Estimated interest: {loanService.CalculateInterestRate(loan)}.");
+                  if (result == null)
+                  {
+                    Console.WriteLine("Loan rejected. Check the borrowing limit and amount.");
+                    break;
+                  }
 
-                  Console.WriteLine("This does not submit a loan application.");
+                  Console.WriteLine($"Loan received: {result.Value.LoanAmount:N2} {account.Currency}");
+
+                  Console.WriteLine($"Interest cost: {result.Value.InterestCost:N2} {account.Currency}");
+
                   break;
                 }
 
               case "9":
-                {
-                  Console.WriteLine("Loan applications and loan records are not stored yet.");
-
-                  break;
-                }
-
-              case "10":
                 {
                   currencyService.GetSupportedCurrencies();
 
@@ -421,14 +431,14 @@
                   break;
                 }
 
-              case "11":
+              case "10":
                 {
                   loggedIn = false;
                   Console.WriteLine("Logged out.");
                   break;
                 }
 
-              case "12":
+              case "11":
                 {
                   loggedIn = false;
                   IsRunning = false;
