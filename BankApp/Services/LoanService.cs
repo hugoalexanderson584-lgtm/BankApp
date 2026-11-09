@@ -1,19 +1,56 @@
 ﻿
+using System;
+
 namespace BankApp
 {
     internal class LoanService
     {
-        public Decimal CalculateInterestRate(Loan loan)
-
+        // Calculates the interest amount for a loan.
+        public decimal CalculateInterestRate(Loan loan)
         {
-            return loan.BorrowAmount * loan.InterestRate;
+            if (loan == null)
+            {
+                throw new ArgumentNullException(nameof(loan));
+            }
 
+            return loan.BorrowAmount * loan.InterestRate;
         }
 
-        public bool CanBorraw(decimal availableFunds, decimal borrowAmount)
+        // Checks if the customer meets the borrowing limit.
+        public bool CanBorrow(decimal availableFunds, decimal borrowAmount)
         {
-            return availableFunds >= borrowAmount *5 ;
+            if (availableFunds < 0 || borrowAmount <= 0)
+            {
+                return false;
+            }
+
+            return borrowAmount <= availableFunds * 5;
+        }
+
+        // Creates a loan and deposits the money into the customer's account.
+        public (decimal LoanAmount, decimal InterestCost)? TakeLoan(
+            BankAccount account, decimal borrowAmount, decimal interestRate)
+        {
+            if (account == null)
+            {
+                throw new ArgumentNullException(nameof(account));
+            }
+
+            if (!CanBorrow(account.Balance, borrowAmount) || interestRate < 0)
+            {
+                return null;
+            }
+
+            Loan loan = new Loan(borrowAmount, interestRate);
+
+            decimal interestCost = CalculateInterestRate(loan);
+
+            if (!account.Deposit(loan.BorrowAmount))
+            {
+                return null;
+            }
+
+            return (loan.BorrowAmount, interestCost);
         }
     }
 }
-

@@ -11,13 +11,25 @@ public class BankAccount
     // The balance can only be changed from inside this class.
     public decimal Balance { get; private set; }
 
-    // The currency used by this account.
-    public Currency Currency { get; set; }
+    // Currency is fixed at creation so the balance cannot be relabeled without conversion.
+    public Currency Currency { get; }
 
     // Creates an account with a starting balance of zero.
     public BankAccount(string accountNumber, int ownerId, Currency currency)
     {
-        AccountNumber = accountNumber;
+        // Validate here too, because accounts can be created without AccountService.
+        if (string.IsNullOrWhiteSpace(accountNumber))
+        {
+            throw new ArgumentException("Account number is required.", nameof(accountNumber));
+        }
+
+        // An enum can contain a numeric value that is not a supported currency.
+        if (!Enum.IsDefined(currency))
+        {
+            throw new ArgumentOutOfRangeException(nameof(currency), "Currency is not supported.");
+        }
+
+        AccountNumber = accountNumber.Trim();
         OwnerId = ownerId;
         Currency = currency;
         Balance = 0m;
@@ -27,7 +39,8 @@ public class BankAccount
     public bool Deposit(decimal amount)
     {
         // Reject zero or negative amounts.
-        if (amount <= 0)
+        // Reject amounts that would overflow decimal as well as nonpositive amounts.
+        if (amount <= 0 || amount > decimal.MaxValue - Balance)
         {
             return false;
         }

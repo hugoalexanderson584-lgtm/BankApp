@@ -4,7 +4,7 @@ namespace BankApp;
 
 public class AccountService
 {
-    // Stores the accounts managed by this service while the app runs.
+    // Stores accounts for this service instance. Reuse the instance to keep the same accounts.
     private readonly List<BankAccount> accounts = new();
 
     // Creates an account and adds it to the list.
@@ -13,19 +13,22 @@ public class AccountService
         // Reject missing, empty or whitespace-only account numbers.
         if (string.IsNullOrWhiteSpace(accountNumber))
         {
-            throw new ArgumentException("Account number is required.");
+            throw new ArgumentException("Account number is required.", nameof(accountNumber));
         }
+
+        // Ignore surrounding spaces when checking and storing account numbers.
+        accountNumber = accountNumber.Trim();
 
         // Check that the account number is not already in use.
         foreach (BankAccount existingAccount in accounts)
         {
             if (existingAccount.AccountNumber == accountNumber)
             {
-                throw new ArgumentException("Account number already exists.");
+                throw new ArgumentException("Account number already exists.", nameof(accountNumber));
             }
         }
 
-        // Create the account with its number, owner and currency.
+        // The constructor also validates the account number and supported currency.
         BankAccount account = new BankAccount(accountNumber, ownerId, currency);
 
         accounts.Add(account);
