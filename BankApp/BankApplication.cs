@@ -32,7 +32,7 @@ namespace BankApp
       Console.ForegroundColor = previousColor;
     }
 
-    private void AdminMenu(Customer loggedCustomer, CurrencyService currencyService, List<Customer> customers, ref bool loggedIn)
+    private void AdminMenu(Customer loggedCustomer, CurrencyService currencyService, AccountService accountService, List<BankAccount> bankAccounts, List<Customer> customers, ref int nextAccountNumber, ref bool loggedIn)
     {
       AdminService adminService = new AdminService(currencyService, customers);
 
@@ -63,6 +63,17 @@ namespace BankApp
             {
               Customer customer = adminService.CreateCustomer(name, username, pin);
 
+              BankAccount account = accountService.CreateAccount(
+                nextAccountNumber.ToString(),
+                customer.OwnerId,
+                Currency.SEK
+              );
+
+              nextAccountNumber++;
+
+              customer.AddAccount(account);
+              bankAccounts.Add(account);
+
               Console.WriteLine($"Created user {customer.UserName} with ID {customer.OwnerId}.");
             }
             catch (ArgumentException ex)
@@ -79,7 +90,7 @@ namespace BankApp
 
             Console.Write("From currency: ");
 
-            if (!Enum.TryParse(Console.ReadLine(), true, out Enums.Currency from)
+            if (!Enum.TryParse(Console.ReadLine(), true, out Currency from)
                 || !Enum.IsDefined(from))
             {
               Console.WriteLine("Unsupported currency.");
@@ -88,7 +99,7 @@ namespace BankApp
 
             Console.Write("To currency: ");
 
-            if (!Enum.TryParse(Console.ReadLine(), true, out Enums.Currency to)
+            if (!Enum.TryParse(Console.ReadLine(), true, out Currency to)
                 || !Enum.IsDefined(to))
             {
               Console.WriteLine("Unsupported currency.");
@@ -137,6 +148,11 @@ namespace BankApp
           {
             loggedIn = false;
             IsRunning = false;
+            break;
+          }
+        default:
+          {
+            Console.WriteLine("Uknown option.");
             break;
           }
       }
@@ -471,7 +487,7 @@ namespace BankApp
 
         default:
           {
-            Console.WriteLine("Unknown action.");
+            Console.WriteLine("Unknown option.");
             break;
           }
       }
@@ -558,7 +574,15 @@ namespace BankApp
 
             if (loggedCustomer.Role == UserRole.Admin)
             {
-              AdminMenu(loggedCustomer, currencyService, customers, ref loggedIn);
+              AdminMenu(
+                loggedCustomer,
+                currencyService,
+                accountService,
+                bankAccounts,
+                customers,
+                ref nextAccountNumber,
+                ref loggedIn
+              );
             }
 
             else
