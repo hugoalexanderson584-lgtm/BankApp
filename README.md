@@ -1,229 +1,229 @@
 # BankApp
 
-BankApp is a C# console banking application targeting **.NET 10**. It brings together customer login, bank accounts, deposits and withdrawals, queued transfers, loan interest estimates, savings interest estimates, and currency conversion.
+BankApp is a console-based banking application made in C# using .NET 10.
 
-The project is a work in progress. Some services are implemented independently but are not connected to the main menu, and the main menu currently contains references to an older account model that must be updated before the application can compile.
+The project was created as a group assignment where we worked with object-oriented programming, Git/GitHub and different parts of a banking system.
 
-## Contents
+The application has two types of users: customers and administrators.
 
-- [Requirements and setup](#requirements-and-setup)
-- [Login and navigation](#login-and-navigation)
-- [Features and current status](#features-and-current-status)
-- [How the code works](#how-the-code-works)
-- [Project structure](#project-structure)
-- [Data and logging](#data-and-logging)
-- [Known limitations and troubleshooting](#known-limitations-and-troubleshooting)
-- [Development and verification](#development-and-verification)
+## Features
 
-## Requirements and setup
+As a customer you can:
 
-You need the .NET 10 SDK and a terminal. JetBrains Rider or another C# IDE is optional. The project has no explicit third-party NuGet package dependencies, database requirement, API keys, or environment-variable configuration.
+- Log in to the bank
+- View your bank accounts
+- Check your balance
+- Deposit money
+- Withdraw money
+- Transfer money between accounts
+- Transfer money to another customer
+- Create new bank accounts
+- Use different currencies
+- View transaction history
+- Apply for a loan
+- Calculate currency exchange
 
-From the repository root:
+As an administrator you can:
+
+- Log in as administrator
+- Create new customers
+- Update currency exchange rates
+- Log out or exit the application
+
+## Login
+
+The application creates two test users when it starts.
+
+| User | Username | PIN |
+| --- | --- | --- |
+| Administrator | admin | 2000 |
+| Customer | customer | pass |
+
+The user has three attempts to enter the correct PIN. After three failed attempts, the user is locked until the application is restarted.
+
+## Getting started
+
+The project requires the .NET 10 SDK.
+
+Open the solution in an IDE or run the project from the terminal.
 
 ```sh
-dotnet --list-sdks
 dotnet restore BankApp.slnx
 dotnet build BankApp.slnx
 dotnet run --project BankApp/BankApp.csproj
 ```
 
-Run the final command after resolving the source compatibility issues described below. In Rider, open `BankApp.slnx` and select the `BankApp` project to run.
+The customer starts without a bank account, so a new account needs to be created before using deposits, withdrawals or transfers.
 
-The project file enables nullable reference analysis and implicit using directives. Its output type is a console executable.
+## Bank accounts
 
-## Login and navigation
+A bank account contains:
 
-`Program.Main` creates a `BankApplication` and calls `Run()`. That method creates three demonstration customers at startup:
+- Account number
+- Owner ID
+- Balance
+- Currency
 
-| Customer | Username | PIN |
-| --- | --- | --- |
-| John Eriksson | `John` | `2000` |
-| Erika Johnsson | `Erika` | `b25o` |
-| Jack Holmes | `Jack` | `tack` |
+The supported currencies are:
 
-At the `Name:` prompt, enter the **username**, such as `John`, rather than the customer's full name. Usernames and PINs are case-sensitive. PINs are strings and may contain letters.
+- SEK
+- EUR
+- USD
 
-Each customer starts without bank accounts. Three incorrect PIN attempts for an existing customer lock that customer for the rest of the process. A successful login resets the failed-attempt counter. Restarting the app recreates all customers and resets the lockouts.
+New accounts start with a balance of 0.
 
-After login, the intended main menu is:
+Deposits must be greater than 0.
 
-```text
-1. View My Accounts
-2. Check Account Balance
-3. Deposit Money
-4. Withdraw Money
-5. Transfer Money
-6. Transaction History
-7. Create New Bank Account
-8. Apply for a Loan
-9. View My Loans
-10. Currency Exchange
-11. Logout
-```
+Withdrawals must also be greater than 0 and the customer cannot withdraw more money than the available balance.
 
-Enter the option number and follow the prompts. Amount parsing uses the current system culture, so the accepted decimal separator depends on the machine's regional settings. Logout returns to the login prompt. There is no main-menu exit option; use `Ctrl+C` to stop the process.
+## Transfers
 
-## Features and current status
+Transfers are created through `TransferService`.
 
-| Feature | Current implementation |
-| --- | --- |
-| Login | Demonstration users, PIN verification, and a three-attempt lockout are implemented. |
-| Account creation and lookup | `AccountService` creates zero-balance accounts and retrieves accounts by owner ID. Main-menu integration still uses an older account model. |
-| Deposits and withdrawals | Implemented in `BankAccount`; main-menu calls need updating to the current API. |
-| Transfers | Queuing, processing, validation, and logging exist in `TransferService`. Main-menu option 5 is a TODO. |
-| Transaction history | The main menu reads the shared `transaction-history.log` file if it exists. |
-| Loans | Option 8 calculates an interest estimate only. It does not submit an application or add money to an account. |
-| Loan records | Option 9 reports that applications and records are not stored yet. |
-| Currency exchange | Option 10 calculates a conversion using fixed rates; it does not change account balances. |
-| Savings | `SavingsAccount` estimates interest, but is not exposed through the main menu. |
+Before a transfer is accepted, the application checks:
 
-## How the code works
+- That both accounts exist
+- That the sender and receiver are different accounts
+- That the amount is greater than 0
+- That the sender owns the account being used
+- That the transaction ID is unique
+- That the correct currency is used
 
-### Customers and authentication
+Transfers are first saved as `pending`.
 
-`AuthenticationService` searches an in-memory customer list by username, then calls `Customer.ControlPin`. The `Customer` class owns its account list, PIN, failed-attempt count, and lockout state. `Customer.OwnerId` is settable but is not assigned distinct values in the demonstration setup.
+A background process checks pending transfers every 15 minutes. When the transfer is processed, the money is withdrawn from the sender and deposited into the receiver's account.
 
-`Modules/User.cs` contains a separate `User` model with name, email, salary, and password properties. Its static `Login()` method is empty; the application uses `Customer` and `AuthenticationService` instead.
+If the accounts use different currencies, the amount is converted before being deposited.
 
-### Bank accounts
+A transaction can have the status:
 
-`BankAccount` holds:
+- pending
+- completed
+- failed
 
-- `AccountNumber`: a nonempty account identifier, trimmed at construction.
-- `OwnerId`: the customer's numeric identifier.
-- `Balance`: a `decimal`, initially zero, changed only through account methods.
-- `Currency`: `SEK`, `EUR`, or `USD`, fixed at creation.
+## Currency exchange
 
-`Deposit(decimal amount)` returns `false` for zero, negative, or overflowing amounts. Otherwise, it increases the balance and returns `true`.
+The application supports exchange between SEK, EUR and USD.
 
-`Withdraw(decimal amount)` returns `false` for zero, negative, or unaffordable amounts. Otherwise, it reduces the balance and returns `true`. Overdrafts are not supported.
+The default exchange rates are demonstration values and are not connected to a real banking API.
 
-`AccountService.CreateAccount(accountNumber, ownerId, currency)` validates account numbers, rejects duplicates within that service instance, stores the account, and returns it. `GetAccountsForUser(ownerId)` returns a new list containing the matching accounts. Reuse the same service instance to retain its account collection. The service does not automatically add accounts to `Customer.Accounts`.
+Example rates:
 
-### Transfers and transaction states
-
-`Transactions` stores a GUID, sender and receiver account identifiers, amount, currency, creation time, and status. New transactions start as `pending`. Only pending transactions may become `completed` or `failed`.
-
-`TransferService` receives a list of bank accounts. Its transfer flow is:
-
-1. `TransferMoney(...)` checks that the amount is positive, the accounts differ and exist, the transaction ID is unused, and both account currencies match the transfer currency.
-2. It creates a pending transaction and logs the request. No money moves at this stage.
-3. `ProcessPendingTransactions()` checks funds, withdraws from the sender, and deposits into the receiver.
-4. A successful transfer becomes completed. A processing failure becomes failed and is logged. If the receiver deposit fails, the code attempts to restore the sender's withdrawal.
-
-`RunProcessingLoopAsync(CancellationToken)` processes pending transfers every **30 seconds** until cancellation. Its startup log says “15-minute transaction processor,” but the actual timer interval is 30 seconds.
-
-The separate `ShowTransferMenu()` offers transfer requests, balance viewing, history viewing, and exit. That menu submits transfers in SEK. It does not start the processing loop itself, and neither it nor the loop is started by the application entry point. Code integrating this service must start processing explicitly or call `ProcessPendingTransactions()` directly.
-
-Transfers require matching account currencies. They do not perform currency conversion, reserve funds when queued, or persist pending transactions.
-
-### Loans and savings interest
-
-`Loan` stores a borrowed amount and an interest rate. `LoanService.CalculateInterestRate(loan)` returns the **interest amount** despite its method name:
-
-```text
-interest = borrowed amount × interest rate
-10,000 × 0.05 = 500
-```
-
-This is a simple estimate without a duration, repayment schedule, compounding, fees, or loan approval process.
-
-The separate `CanBorraw(availableFunds, borrowAmount)` method returns whether available funds are at least five times the requested loan. That method is not used by the main menu.
-
-`SavingsAccount` inherits from `BankAccount`, adds an editable `InterestRate`, and calculates `Balance × InterestRate` through `EstimateInterest()`. It does not credit that interest to the balance automatically.
-
-### Currency conversion
-
-`CurrencyService` supports these fixed base rates:
-
-| Conversion | Multiplier |
+| Conversion | Rate |
 | --- | --- |
 | SEK → EUR | 0.090 |
 | SEK → USD | 0.10 |
 | EUR → USD | 1.12 |
 
-Reverse conversions use the reciprocal of the corresponding rate. Converting a currency to itself uses 1. Results are rounded to two decimal places, and negative amounts are rejected. These are demonstration values embedded in the source, not live market rates.
+Reverse conversions use the corresponding reversed rate.
 
-The menu accepts currency names without regard to case, such as `SEK`, `eur`, or `USD`. For example, converting `100` SEK to EUR yields `9.00` numerically; the displayed decimal formatting may vary by culture.
+Administrators can update exchange rates while the application is running.
 
-`UpdateExchangeRate(...)` exists as a service method but has no menu or authentication enforcement. The rate lookup and update code have limitations described below.
+The currency exchange option in the customer menu only calculates the converted amount. It does not move money between accounts.
+
+## Loans
+
+Customers can apply for a loan using one of their existing accounts.
+
+The loan amount must be positive and cannot be more than five times the current account balance.
+
+For example:
+
+If the account balance is:
+
+```text
+1000 SEK
+```
+
+the maximum loan is:
+
+```text
+5000 SEK
+```
+
+If the loan is accepted, the loan amount is deposited directly into the selected account.
+
+The application also calculates an estimated interest cost based on the interest percentage entered by the user.
+
+## Transaction history
+
+Transfers are written to:
+
+```text
+transaction-history.log
+```
+
+The log contains information about created, completed and failed transfers.
+
+It is also used to log when the transfer processor starts, stops and checks pending transactions.
 
 ## Project structure
 
 ```text
-BankApp.slnx                       Solution file
+BankApp.slnx
 BankApp/
-├── BankApp.csproj                 .NET 10 console project configuration
-├── Program.cs                     Application entry point
-├── BankApplication.cs             Login loop and main console menu
-├── BankAccount.cs                 Account identity, balance, and money operations
-├── SavingsAccount.cs              Savings interest estimate
-├── Transactions.cs                Transaction data and status transitions
-├── TransactionLogger.cs           Timestamped file and console logging
+├── BankApp.csproj
+├── Program.cs
+├── BankApplication.cs
+├── TransactionLogger.cs
 ├── Enums/
-│   └── Currency.cs                SEK, EUR, and USD
+│   ├── Currency.cs
+│   └── UserRole.cs
 ├── Modules/
-│   ├── Loan.cs                    Loan amount and rate
-│   ├── User.cs                    Separate, currently unused user model
-│   └── readme.txt                 Folder guidance
+│   ├── BankAccount.cs
+│   ├── Customer.cs
+│   ├── Loan.cs
+│   ├── SavingsAccount.cs
+│   └── Transactions.cs
 └── Services/
-    ├── AccountService.cs          Account creation and owner lookup
-    ├── AuthenticationService.cs   Login logic and Customer model
-    ├── CurrencyService.cs         Conversion rates and calculations
-    ├── LoanService.cs             Interest and eligibility calculations
-    ├── TransferService.cs         Queued transfers, processor, and transfer menu
-    └── readme.txt                 Folder guidance
+    ├── AccountService.cs
+    ├── AdminService.cs
+    ├── AuthenticationService.cs
+    ├── CurrencyService.cs
+    ├── LoanService.cs
+    └── TransferService.cs
 ```
 
-Most types use the `BankApp` namespace, even when stored in subfolders. `TransferService` is currently in the global namespace.
+## Testing
 
-## Data and logging
+The project does not currently contain automated tests.
 
-Customers, balances, account lists, loans, and queued transactions have no database or serialized storage. In-memory state is lost when the process ends. Logging does not restore this state on startup.
+We tested the application manually during development.
 
-`TransactionLogger.Log(...)` appends entries to `transaction-history.log` in the **current working directory** and also prints them to the console:
+Some of the things we tested were:
 
-```text
-yyyy-MM-dd HH:mm:ss | message
-```
+- Customer login
+- Administrator login
+- Incorrect PIN attempts
+- Creating customers
+- Creating bank accounts
+- Deposits
+- Withdrawals
+- Transfers
+- Currency conversion
+- Updating exchange rates
+- Loan limits
+- Transaction history
 
-The log records transfer creation, processing ticks, completion, failure, and processor startup/shutdown when those service paths are invoked. Account deposits and withdrawals do not automatically write log entries.
-
-History is a shared file, not filtered by customer. Its location can differ between terminal and IDE runs if their working directories differ. Deleting the file removes the recorded history; it does not reset balances in a running process.
-
-## Known limitations and troubleshooting
-
-### SDK compatibility
-
-If a build reports `NETSDK1045`, check `dotnet --list-sdks` and select/install a .NET 10 SDK. The project targets `net10.0`; a .NET 9 SDK cannot build it.
-
-During README preparation, the installed SDK was `9.0.300`, and `dotnet build BankApp.slnx --no-restore` stopped with `NETSDK1045`. Application execution could not be verified in that environment.
-
-### Main-menu account API mismatch
-
-`BankApplication.cs` still references the missing `Account` type and old members named `accountName` and `salary`. The current model is `BankAccount`, with `AccountNumber` and `Balance`, and its constructor requires an account number, owner ID, and currency. The menu also parses deposit and withdrawal amounts as `double`, while `BankAccount` expects `decimal`.
-
-These source mismatches must be resolved in addition to selecting a compatible SDK. Account-selection prompts currently ask for a list number while the lookup code compares an account name; that interaction also needs alignment when updating the menu.
-
-### Other unfinished behavior
-
-- Main-menu transfers and loan records are unfinished, and savings accounts have no menu integration.
-- Currency dictionary lookups mistakenly use `(Currency, Currency)` from the service property instead of `(from, to)`. Explicit fallback branches currently provide the listed conversion rates, but dictionary rate updates do not reliably affect conversions.
-- `UpdateExchangeRate` repeats the forward-key check instead of handling a reverse key, so reverse updates are not implemented correctly.
-- Credentials are stored as plain strings, entered visibly, and embedded in source for demonstration. There is no registration, PIN reset, or administrative workflow.
-- There is no synchronization for concurrent access to accounts and transaction lists. Integrating the background processor with menu actions needs concurrency handling.
-- File read/write failures are not handled throughout the logging and history code.
-- The main loop has no end-of-input handling or graceful shutdown path.
-
-## Development and verification
-
-There is currently no automated test project in the repository. Build with:
+The project can also be checked for compilation errors with:
 
 ```sh
 dotnet build BankApp.slnx
 ```
 
-After fixing the account integration, useful manual checks include successful and failed logins, lockout after three incorrect PINs, account creation, rejected invalid deposits, insufficient-funds withdrawals, loan interest estimates, and conversions in both directions.
+## Limitations
 
-When connecting transfers, verify that queuing leaves balances unchanged, processing moves funds once, failures leave appropriate balances and statuses, and cancellation stops the processor. Check the shared log separately from in-memory balances.
+The application currently stores most information in memory.
+
+This means that accounts, customers, balances, exchange rates and pending transactions are reset when the application restarts.
+
+The project also does not currently include:
+
+- A database
+- Persistent customer data
+- Hidden PIN input
+- Loan repayment
+- Automatic savings interest
+- Live currency exchange rates
+
+These would be possible areas for future development.
